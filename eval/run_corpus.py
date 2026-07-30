@@ -39,12 +39,24 @@ def _fresh_workspace(task_id: str, workspace_seed: str) -> Path:
 def run_all():
     tasks = load_tasks()
     print(f"running {len(tasks)} corpus tasks...")
+    failed = []
     for task in tasks:
         run_id = task["task_id"]
         print(f"  {run_id} ({task['category']}) ...")
         workspace = _fresh_workspace(run_id, task["workspace_seed"])
-        run_agent(task=task["prompt"], workspace=str(workspace), run_id=run_id)
+        try:
+            run_agent(task=task["prompt"], workspace=str(workspace), run_id=run_id)
+        except Exception as exc:
+            # One task's unexpected crash shouldn't take out the other 29 --
+            # a real run of all 30 tasks is real wall-clock time (see module
+            # docstring), so losing that to one bad task is expensive.
+            print(f"  !! {run_id} FAILED: {exc}")
+            failed.append((run_id, str(exc)))
     print("done — see traces/ for output, then run eval/analyze.py")
+    if failed:
+        print(f"{len(failed)} task(s) failed and were skipped:")
+        for run_id, err in failed:
+            print(f"  - {run_id}: {err}")
 
 
 if __name__ == "__main__":

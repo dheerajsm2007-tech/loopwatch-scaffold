@@ -32,12 +32,42 @@ second commit of 2026-07-30 (`b49dd9c`), everything pushed to `origin/main`.
 | Committed | ✅ `b49dd9c` (and `a446d40`, `129f234` before it) |
 | Pushed to origin | ✅ `origin/main` at `b49dd9c` |
 
+## Full corpus run — results (2026-07-30, real Ollama, all 32 tasks)
+
+`eval/run_corpus.py` ran to completion, all 32 tasks (15 pathological + 15
+productive + 2 `fixture_*`), zero crashes. `eval/analyze.py`:
+
+```
+pathological: 1/16 caught  (6%)
+productive:   2/16 wrongly killed  (12%)
+```
+
+**Read these numbers with the confound spelled out, not at face value.**
+Tracing every early-termination event back to its task:
+
+| Outcome | Count | What it means |
+|---|---|---|
+| Real detector halt — correct catch | 1 (`pathological_04`) | Detector 3 (near-repeat) caught 3 identical `search` calls |
+| Real detector halt — false-kill | 2 (`productive_05`, `productive_13`) | The model itself looped on identical `write_file`/`read_file` calls on a genuinely doable task — a real false-kill, not a harness bug |
+| **Graceful stop — model never called a tool** | **10 of 32** | `qwen2.5:7b` drifted into narrating/explaining instead of calling `done` or another tool; `call_llm()`'s retries were exhausted and `run_agent()` stopped cleanly (this session's earlier fix) |
+| Completed via the model's own `done` call | 19 | Neither halted nor crashed — includes pathological tasks the model apparently "solved" (or gave up on) without ever looping enough to trip a detector |
+
+**The takeaway**: with only 3 total detector-halt events across 32 real runs,
+this is far too small a sample to say anything about detector accuracy yet,
+and a third of all runs ended not because of looping/not-looping but because
+the local model stopped producing tool calls at all. Before trusting a
+catch-rate number for the deck, either (a) get a more reliably tool-calling
+model, or (b) treat "model went chatty" as its own outcome category, separate
+from "detector caught it" / "detector missed it," so the catch-rate denominator
+isn't inflated by runs that never had a real chance to spin.
+
 ## What's genuinely left (nothing blocking)
 
-1. **Corpus content review** — `fixtures/workspaces/basic_repo` was built by inference from the 30 task prompts, not delivered by Person 3. It's internally verified (syntax-checked, the two designed bugs empirically confirmed to actually fail/misbehave as intended) but worth a look from whoever owns the corpus. One flagged, unresolved content conflict: `services/user_service.py` is targeted by both `pathological_04` (fix a syntax error on line 42) and `productive_09` (add salted hashing) — a `productive_09` run will hit that syntax error first. Documented in `fixtures/workspaces/basic_repo/README.md`.
-2. **Full 30-task corpus run** — only 2 of the 30 tasks have actually been run against real Ollama (`productive_03`, twice). `eval/run_corpus.py` is fixed and ready; running all 30 for real catch-rate/false-kill numbers is real wall-clock time (per the original brief's own warning), not yet done.
+1. **Interpret/re-run the corpus numbers above** — don't take 6%/12% to the
+   deck as-is; the chatty-model confound needs addressing first (see above).
+2. **Corpus content review** — `fixtures/workspaces/basic_repo` was built by inference from the 30 task prompts, not delivered by Person 3. It's internally verified (syntax-checked, the two designed bugs empirically confirmed to actually fail/misbehave as intended) but worth a look from whoever owns the corpus. One flagged, unresolved content conflict: `services/user_service.py` is targeted by both `pathological_04` (fix a syntax error on line 42) and `productive_09` (add salted hashing) — a `productive_09` run will hit that syntax error first. Documented in `fixtures/workspaces/basic_repo/README.md`.
 3. **Hour 16 — demo rehearsal** — `demo/run_demo.py` is now fully wired (all 3 beats runnable), but hasn't actually been rehearsed live.
-4. **Code quality**: `qwen2.5:7b`'s own output quality on `productive_03` was mediocre (introduced an unrequested Flask dependency, left a bug in its own generated code) — that's the model's competence, not a harness bug, but worth knowing going into a live demo.
+4. **Code quality**: `qwen2.5:7b`'s own output quality was mediocre in several runs (introduced an unrequested Flask dependency in `productive_03`, extensive narration instead of action) — that's the model's competence, not a harness bug, but worth knowing going into a live demo.
 
 ## Repo state
 

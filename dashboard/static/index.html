@@ -11,15 +11,55 @@
     .stat { display: inline-block; margin-right: 2rem; font-size: 1.4rem; }
     .stat span { display: block; font-size: 0.8rem; color: #8a94a2; }
     canvas { max-width: 900px; margin-top: 1rem; }
+
+    #haltBanner {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.9rem 1.2rem;
+      border-radius: 6px;
+      background: #4a0f14;
+      border: 2px solid #ff4d5e;
+      color: #ffd7da;
+      font-size: 1rem;
+      max-width: 900px;
+    }
+    #haltBanner.visible { display: block; }
+    #haltBanner .halt-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.03em;
+      color: #ff8a94;
+      margin-bottom: 0.3rem;
+    }
+    #haltBanner .halt-detail { color: #ffd7da; }
+
+    #statusPill {
+      display: inline-block;
+      padding: 0.1rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      background: #1f2a35;
+      color: #7fd996;
+    }
+    #statusPill.halted { background: #4a0f14; color: #ff8a94; }
   </style>
 </head>
 <body>
   <h1>LOOPWATCH — live run</h1>
   <select id="runSelect"></select>
+
+  <div id="haltBanner">
+    <div class="halt-title">HALTED — <span id="haltDetector"></span></div>
+    <div class="halt-detail">
+      <span id="haltReason"></span>
+      (at step <span id="haltStep"></span>)
+    </div>
+  </div>
+
   <div>
     <div class="stat"><span>steps</span><b id="stepCount">0</b></div>
     <div class="stat"><span>spend</span><b id="spend">$0.0000</b></div>
-    <div class="stat"><span>status</span><b id="status">idle</b></div>
+    <div class="stat"><span>status</span><b id="statusPill">idle</b></div>
   </div>
   <canvas id="spendChart" height="120"></canvas>
   <canvas id="noveltyChart" height="120"></canvas>
@@ -48,6 +88,24 @@
       if (runs.includes(current)) select.value = current;
     }
 
+    function renderHaltBanner(verdict) {
+      const banner = document.getElementById('haltBanner');
+      const statusPill = document.getElementById('statusPill');
+
+      if (verdict && verdict.should_halt) {
+        document.getElementById('haltDetector').textContent = verdict.detector;
+        document.getElementById('haltReason').textContent = verdict.reason;
+        document.getElementById('haltStep').textContent = verdict.halted_at_step;
+        banner.classList.add('visible');
+        statusPill.textContent = 'halted';
+        statusPill.classList.add('halted');
+      } else {
+        banner.classList.remove('visible');
+        statusPill.classList.remove('halted');
+        statusPill.textContent = 'running';
+      }
+    }
+
     async function refreshTrace() {
       const runId = document.getElementById('runSelect').value;
       if (!runId) return;
@@ -55,9 +113,11 @@
 
       document.getElementById('stepCount').textContent = data.steps.length;
       document.getElementById('spend').textContent = '$' + data.total_cost.toFixed(4);
+      renderHaltBanner(data.verdict);
 
-      // client-side novelty: has this exact observation text been seen before?
-      const seen = new Set();
+      // Novelty per step comes from the server (mirrors detector 4's real
+      // signal: observation hash OR workspace_hash changed vs the
+      // immediately previous step — not "ever seen before").
       let cumulative = 0;
       const spendPoints = [];
       const noveltyPoints = [];
@@ -65,12 +125,10 @@
 
       for (const step of data.steps) {
         cumulative += step.cost_usd;
-        const isNew = !seen.has(step.observation);
-        seen.add(step.observation);
 
         labels.push(step.step);
         spendPoints.push(cumulative.toFixed(4));
-        noveltyPoints.push(isNew ? 1 : 0);
+        noveltyPoints.push(step.novel ? 1 : 0);
       }
 
       spendChart.data.labels = labels;

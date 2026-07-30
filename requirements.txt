@@ -1,5 +1,4 @@
 fastapi
 uvicorn
-anthropic
-boto3
+openai
 pytest

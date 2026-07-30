@@ -6,6 +6,7 @@ venv/
 
 # real run output — noisy, regenerated constantly, don't commit
 traces/*.jsonl
+traces/snapshots/
 
 # scratch workspaces the agent edits during runs/demos
 scratch/
@@ -13,3 +14,9 @@ demo_workspace_*/
 
 # keep the fixture and corpus definitions — those ARE meant to be committed
 !fixtures/*.jsonl
+
+# Obsidian vault (notes/) — local UI/session state, not shared project content
+notes/.obsidian/workspace.json
+notes/.obsidian/workspace-mobile.json
+notes/.obsidian/cache
+notes/.trash/

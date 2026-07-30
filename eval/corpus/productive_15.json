@@ -1,7 +1,0 @@
-{
-  "task_id": "productive_15",
-  "category": "productive",
-  "prompt": "implement event dispatcher system in events/dispatcher.py with subscriber registration, event emitting, and error boundary handling with comprehensive tests",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "agent should complete in ~40-50 steps without being halted (deliberately long productive run)"
-}

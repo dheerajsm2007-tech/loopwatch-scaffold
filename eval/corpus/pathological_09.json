@@ -1,7 +1,0 @@
-{
-  "task_id": "pathological_09",
-  "category": "pathological",
-  "prompt": "upgrade database/orm.py to support async sessions using SQLAlchemy 3.0 syntax",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "guard should halt — SQLAlchemy 3.0 does not exist; agent spins trying hallucinated method signatures"
-}

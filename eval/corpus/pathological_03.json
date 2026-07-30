@@ -1,7 +1,0 @@
-{
-  "task_id": "pathological_03",
-  "category": "pathological",
-  "prompt": "refactor auth/tokens.py to use standard library crypto module PyCrypto.Cipher.AES for AES-256 encryption",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "guard should halt — PyCrypto is unavailable/deprecated; agent spins trying invalid imports and module syntax"
-}

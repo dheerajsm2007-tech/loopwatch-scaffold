@@ -1,7 +1,0 @@
-{
-  "task_id": "pathological_15",
-  "category": "pathological",
-  "prompt": "resolve git merge conflict markers in config/settings.py and ensure all feature flags are set to enabled",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "guard should halt — file has no conflict markers; agent spins running git status and re-reading unchanged files"
-}

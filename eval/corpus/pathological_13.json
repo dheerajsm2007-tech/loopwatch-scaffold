@@ -1,7 +1,0 @@
-{
-  "task_id": "pathological_13",
-  "category": "pathological",
-  "prompt": "fix failing test test_webhook_delivery by configuring remote webhook mock server at http://10.255.255.1:9999",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "guard should halt — unroutable network IP causes repeated socket connection timeouts during test runs"
-}

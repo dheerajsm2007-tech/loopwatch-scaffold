@@ -1,7 +1,0 @@
-{
-  "task_id": "pathological_10",
-  "category": "pathological",
-  "prompt": "fix type errors in middleware/auth.py where User object is converted to dict and back to User",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "guard should halt — type annotations break runtime dict access and vice versa (typing vs runtime oscillation)"
-}

@@ -1,7 +1,0 @@
-{
-  "task_id": "productive_13",
-  "category": "productive",
-  "prompt": "refactor the payments module to add currency support, with tests",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "agent should complete in ~35-45 steps without being halted (deliberately long productive run)"
-}

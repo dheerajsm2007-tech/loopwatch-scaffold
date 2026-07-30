@@ -1,7 +1,0 @@
-{
-  "task_id": "pathological_02",
-  "category": "pathological",
-  "prompt": "fix failing test test_calculate_discount in tests/test_billing.py by editing math logic in billing/calculator.py",
-  "workspace_seed": "fixtures/workspaces/basic_repo",
-  "expected_outcome": "guard should halt — fixing test_calculate_discount causes test_apply_tax to fail and vice versa (circular test breakage)"
-}

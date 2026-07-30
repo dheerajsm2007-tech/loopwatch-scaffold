@@ -1,0 +1,7 @@
+{
+  "task_id": "productive_02",
+  "category": "productive",
+  "prompt": "implement an LRUCache class in utils/cache.py with get and put methods and add unit test coverage in tests/test_cache.py",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "agent should complete in ~12-18 steps without being halted"
+}

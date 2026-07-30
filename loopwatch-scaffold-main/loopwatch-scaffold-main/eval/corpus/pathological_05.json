@@ -1,0 +1,7 @@
+{
+  "task_id": "pathological_05",
+  "category": "pathological",
+  "prompt": "search the codebase for references to DEPRECATED_TOKEN_KEY and replace them with API_SECRET_V2",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "guard should halt — symbol does not exist; agent spins searching with different regex/grep flags"
+}

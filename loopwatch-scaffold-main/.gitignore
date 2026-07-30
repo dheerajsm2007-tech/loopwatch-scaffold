@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+node_modules/
+dist/
+.pytest_cache/
+*.zip
+
+# real run output
+traces/snapshots/
+
+# scratch workspaces
+scratch/
+demo_workspace_*/

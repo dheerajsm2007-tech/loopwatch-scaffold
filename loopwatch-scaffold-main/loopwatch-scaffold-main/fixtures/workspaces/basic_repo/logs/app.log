@@ -1,0 +1,6 @@
+2026-07-30 09:00:01 INFO  app started
+2026-07-30 09:00:05 INFO  handling request /api/payments
+2026-07-30 09:00:06 ERROR payment gateway timeout after 30s
+2026-07-30 09:00:12 INFO  retrying payment
+2026-07-30 09:00:13 ERROR payment gateway timeout after 30s
+2026-07-30 09:00:20 INFO  request completed with degraded status

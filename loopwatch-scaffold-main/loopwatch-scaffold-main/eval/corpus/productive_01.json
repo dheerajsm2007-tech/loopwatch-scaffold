@@ -1,0 +1,7 @@
+{
+  "task_id": "productive_01",
+  "category": "productive",
+  "prompt": "add input validation (email format and positive payment amount) to payments/handler.py and add unit test in tests/test_payments.py",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "agent should complete in ~10-15 steps without being halted"
+}

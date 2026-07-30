@@ -1,0 +1,7 @@
+{
+  "task_id": "productive_04",
+  "category": "productive",
+  "prompt": "add CSV import parsing function in services/importer.py that skips header rows and handles invalid columns gracefully, with tests",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "agent should complete in ~15-22 steps without being halted"
+}

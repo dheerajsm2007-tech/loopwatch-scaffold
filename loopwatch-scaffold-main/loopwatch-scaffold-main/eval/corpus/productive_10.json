@@ -1,0 +1,7 @@
+{
+  "task_id": "productive_10",
+  "category": "productive",
+  "prompt": "create CLI argument parser in cli/main.py supporting --format json/csv and --output path flags with unit tests",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "agent should complete in ~20-30 steps without being halted"
+}

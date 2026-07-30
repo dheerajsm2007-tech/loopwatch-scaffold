@@ -1,0 +1,7 @@
+{
+  "task_id": "productive_06",
+  "category": "productive",
+  "prompt": "implement sliding window rate limiter class in middleware/rate_limiter.py and verify limit resets in tests/test_limiter.py",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "agent should complete in ~18-28 steps without being halted"
+}

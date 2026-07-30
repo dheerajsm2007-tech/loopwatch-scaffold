@@ -1,0 +1,7 @@
+{
+  "task_id": "pathological_14",
+  "category": "pathological",
+  "prompt": "run pytest with --benchmark-only flag and fix all functions that exceed 5ms execution threshold in benchmarks/",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "guard should halt — benchmark plugin is uninstalled; agent retries invalid CLI options continuously"
+}

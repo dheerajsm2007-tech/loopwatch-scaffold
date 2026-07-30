@@ -14,7 +14,6 @@ call_llm() talks to a local Ollama model via its OpenAI-compatible endpoint
 import json
 import logging
 import os
-import time
 import uuid
 from pathlib import Path
 
@@ -307,11 +306,9 @@ def run_agent(task: str, workspace: str, run_id: str | None = None,
             print(f"[run_agent] reached max_steps={max_steps}, stopping")
             break
 
-        time.sleep(0)  # placeholder for rate limiting if needed
-
     return run_id
 
 
 if __name__ == "__main__":
-    # quick manual smoke test once the TODOs above are filled in
+    # manual smoke test against a real local Ollama instance
     run_agent(task="find and fix the bug in payments/handler.py", workspace="./scratch")

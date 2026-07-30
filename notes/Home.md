@@ -18,6 +18,7 @@ not a substitute for those docs.
 - [[Agents-and-Skills]] — playbook for using subagents/skills at full leverage
 - [[Session-Report-2026-07-30]] — harness/guard implementation, review findings, next steps
 - [[PROGRESS]] — living status doc: what's done, what's left, Ollama model, checkpoint tracker
+- [[Improvements-Report]] — dashboard redesign, dead-code audit, what to improve next
 - Harness (Person 1)
 - Detectors 1-3 (Person 1)
 - Detector 4 — progress detection (Person 2)

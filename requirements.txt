@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+anthropic
+boto3
+pytest

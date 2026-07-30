@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# real run output — noisy, regenerated constantly, don't commit
+traces/*.jsonl
+
+# scratch workspaces the agent edits during runs/demos
+scratch/
+demo_workspace_*/
+
+# keep the fixture and corpus definitions — those ARE meant to be committed
+!fixtures/*.jsonl

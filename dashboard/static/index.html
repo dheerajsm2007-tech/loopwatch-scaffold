@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Loopwatch</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    body { font-family: -apple-system, Arial, sans-serif; margin: 2rem; background: #0e141b; color: #e8ecf1; }
+    h1 { font-size: 1.2rem; letter-spacing: 0.05em; }
+    select { margin-bottom: 1rem; }
+    .stat { display: inline-block; margin-right: 2rem; font-size: 1.4rem; }
+    .stat span { display: block; font-size: 0.8rem; color: #8a94a2; }
+    canvas { max-width: 900px; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>LOOPWATCH — live run</h1>
+  <select id="runSelect"></select>
+  <div>
+    <div class="stat"><span>steps</span><b id="stepCount">0</b></div>
+    <div class="stat"><span>spend</span><b id="spend">$0.0000</b></div>
+    <div class="stat"><span>status</span><b id="status">idle</b></div>
+  </div>
+  <canvas id="spendChart" height="120"></canvas>
+  <canvas id="noveltyChart" height="120"></canvas>
+
+  <script>
+    const spendCtx = document.getElementById('spendChart').getContext('2d');
+    const noveltyCtx = document.getElementById('noveltyChart').getContext('2d');
+
+    const spendChart = new Chart(spendCtx, {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'Cumulative spend ($)', data: [], borderColor: '#7C4DE8', tension: 0.2 }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    const noveltyChart = new Chart(noveltyCtx, {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'Novelty (1 = new info, 0 = repeat)', data: [], borderColor: '#FF9900', tension: 0.2, stepped: true }] },
+      options: { responsive: true, scales: { y: { min: 0, max: 1 } } }
+    });
+
+    async function refreshRunList() {
+      const runs = await fetch('/api/runs').then(r => r.json());
+      const select = document.getElementById('runSelect');
+      const current = select.value;
+      select.innerHTML = runs.map(r => `<option value="${r}">${r}</option>`).join('');
+      if (runs.includes(current)) select.value = current;
+    }
+
+    async function refreshTrace() {
+      const runId = document.getElementById('runSelect').value;
+      if (!runId) return;
+      const data = await fetch(`/api/trace/${runId}`).then(r => r.json());
+
+      document.getElementById('stepCount').textContent = data.steps.length;
+      document.getElementById('spend').textContent = '$' + data.total_cost.toFixed(4);
+
+      // client-side novelty: has this exact observation text been seen before?
+      const seen = new Set();
+      let cumulative = 0;
+      const spendPoints = [];
+      const noveltyPoints = [];
+      const labels = [];
+
+      for (const step of data.steps) {
+        cumulative += step.cost_usd;
+        const isNew = !seen.has(step.observation);
+        seen.add(step.observation);
+
+        labels.push(step.step);
+        spendPoints.push(cumulative.toFixed(4));
+        noveltyPoints.push(isNew ? 1 : 0);
+      }
+
+      spendChart.data.labels = labels;
+      spendChart.data.datasets[0].data = spendPoints;
+      spendChart.update();
+
+      noveltyChart.data.labels = labels;
+      noveltyChart.data.datasets[0].data = noveltyPoints;
+      noveltyChart.update();
+    }
+
+    document.getElementById('runSelect').addEventListener('change', refreshTrace);
+
+    setInterval(async () => { await refreshRunList(); await refreshTrace(); }, 1000);
+    refreshRunList().then(refreshTrace);
+  </script>
+</body>
+</html>

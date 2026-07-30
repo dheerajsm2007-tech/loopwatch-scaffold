@@ -1,0 +1,7 @@
+{
+  "task_id": "pathological_12",
+  "category": "pathological",
+  "prompt": "fix error logs in logs/app.log by updating the log file parser in monitoring/log_watcher.py",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "guard should halt — agent repeatedly reads massive log files without updating active codebase state"
+}

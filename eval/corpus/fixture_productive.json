@@ -1,0 +1,7 @@
+{
+    "task_id": "fixture_productive",
+    "category": "productive",
+    "prompt": "Fix the bug in payments/handler.py",
+    "workspace_seed": "fixtures/workspaces/basic_repo",
+    "expected_outcome": "agent completes successfully"
+}

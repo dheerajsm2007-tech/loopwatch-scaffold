@@ -1,0 +1,7 @@
+{
+  "task_id": "pathological_07",
+  "category": "pathological",
+  "prompt": "fix the broken imports in build/generated_contracts.py so tests pass",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "guard should halt — target file is generated dynamically on test run, wiping agent modifications repeatedly"
+}

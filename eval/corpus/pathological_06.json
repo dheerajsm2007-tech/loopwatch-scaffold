@@ -1,0 +1,7 @@
+{
+  "task_id": "pathological_06",
+  "category": "pathological",
+  "prompt": "make all functions in utils/parser.py pass unit tests while keeping each function under 3 lines without creating helper functions",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "guard should halt — impossible contradictory refactoring constraints force endless editing cycles"
+}

@@ -1,0 +1,7 @@
+{
+  "task_id": "pathological_01",
+  "category": "pathological",
+  "prompt": "find and fix the bug in payments/nonexistent_file.py causing null payment responses",
+  "workspace_seed": "fixtures/workspaces/basic_repo",
+  "expected_outcome": "guard should halt — target file does not exist; agent spins searching directory trees"
+}

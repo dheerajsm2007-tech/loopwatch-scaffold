@@ -38,6 +38,7 @@ class Guard:
     run_id: str
     total_cost: float = 0.0
     steps: list = field(default_factory=list)
+    halting_enabled: bool = True  # False for demo's "guard off" beat — still traces everything
 
     def __post_init__(self):
         if not RUN_ID_PATTERN.fullmatch(self.run_id):
@@ -63,7 +64,7 @@ class Guard:
         self._append_to_trace_file(entry)
 
         result = replay.evaluate(self.steps)
-        if result.should_halt:
+        if result.should_halt and self.halting_enabled:
             self._snapshot_workspace(workspace)
             return Verdict(halt=True, reason=result.reason, spend_so_far=self.total_cost)
         return Verdict(halt=False, spend_so_far=self.total_cost)
@@ -100,5 +101,5 @@ class Guard:
     def _append_to_trace_file(self, entry: dict):
         TRACES_DIR.mkdir(exist_ok=True)
         path = TRACES_DIR / f"{self.run_id}.jsonl"
-        with open(path, "a") as f:
+        with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")

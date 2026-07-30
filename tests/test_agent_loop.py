@@ -182,3 +182,19 @@ def test_run_agent_recovers_from_tool_argument_mismatch_instead_of_crashing(tmp_
     run_id = agent_loop.run_agent(task="do something", workspace=str(tmp_path), run_id="typeerr_run")
 
     assert run_id == "typeerr_run"
+
+
+def test_run_agent_stops_gracefully_when_model_never_calls_a_tool(tmp_path, monkeypatch):
+    """Regression test: call_llm() raising LLMResponseError (model kept
+    responding with plain text instead of a tool call) must not crash
+    run_agent() — it should stop cleanly and still return the run_id."""
+    monkeypatch.setattr("harness.guard.TRACES_DIR", tmp_path / "traces")
+
+    def always_fails(messages):
+        raise agent_loop.LLMResponseError("model did not call a tool: 'just chatting'")
+
+    monkeypatch.setattr(agent_loop, "call_llm", always_fails)
+
+    run_id = agent_loop.run_agent(task="do something", workspace=str(tmp_path), run_id="chatty_model_run")
+
+    assert run_id == "chatty_model_run"

@@ -18,9 +18,13 @@ LONG_PRODUCTIVE_TASK = "refactor the payments module to add currency support, wi
 
 def demo_guard_off():
     print("=== DEMO 1: guard disabled — watch the dashboard climb ===")
-    # TODO: run with guard's halting disabled (e.g. a flag) and manually
-    # stop after a fixed step count for the live demo
-    run_agent(task=IMPOSSIBLE_TASK, workspace="./demo_workspace_1", run_id="demo_guard_off")
+    run_agent(
+        task=IMPOSSIBLE_TASK,
+        workspace="./demo_workspace_1",
+        run_id="demo_guard_off",
+        halting_enabled=False,
+        max_steps=20,  # bounded so the live demo doesn't run forever, unbounded by the guard itself
+    )
 
 
 def demo_guard_on():

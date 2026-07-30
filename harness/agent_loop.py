@@ -75,6 +75,18 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "think",
+            "description": "Reason out loud without taking an action, e.g. to plan the next step.",
+            "parameters": {
+                "type": "object",
+                "properties": {"reasoning": {"type": "string"}},
+                "required": ["reasoning"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "done",
             "description": "Call this once the task is complete. Stops the loop.",
             "parameters": {"type": "object", "properties": {}},
@@ -190,16 +202,55 @@ def call_llm(messages: list) -> dict:
     raise last_error
 
 
-def run_agent(task: str, workspace: str, run_id: str | None = None) -> str:
-    """Runs the loop until the agent stops itself, or the guard halts it."""
+def _execute_tool(tool: str, args: dict, workspace: str) -> str:
+    """Dispatch to the named tool and return its observation text.
+
+    Raises ValueError for an unrecognized tool name. TypeError/ValueError/
+    OSError raised by the tool itself are the caller's responsibility to
+    catch — they're recoverable (fed back to the model as an observation),
+    not process-fatal.
+    """
+    if tool == "search":
+        return search(workspace, **args)
+    elif tool == "read_file":
+        return read_file(workspace, **args)
+    elif tool == "write_file":
+        return write_file(workspace, **args)
+    elif tool == "think":
+        return args.get("reasoning", "")
+    else:
+        raise ValueError(f"unknown tool: {tool}")
+
+
+def run_agent(task: str, workspace: str, run_id: str | None = None,
+              halting_enabled: bool = True, max_steps: int | None = None) -> str:
+    """Runs the loop until the agent stops itself, the guard halts it, or
+    max_steps is reached (if set).
+
+    halting_enabled=False and max_steps let a caller (e.g. the "guard off"
+    demo beat) run without the guard's halt logic while still capping how
+    long a live demo run goes on for — every step is still traced normally
+    either way, only the halt decision itself is suppressed.
+    """
     run_id = run_id or f"run_{uuid.uuid4().hex[:8]}"
-    guard = Guard(run_id=run_id)
+    guard = Guard(run_id=run_id, halting_enabled=halting_enabled)
 
     messages = [{"role": "user", "content": task}]
     step = 0
 
     while True:
-        response = call_llm(messages)
+        try:
+            response = call_llm(messages)
+        except LLMResponseError as exc:
+            # The model never produced a valid tool call even after
+            # call_llm()'s internal retries (e.g. it drifted into plain-text
+            # narration instead of calling a tool or "done"). Stop cleanly
+            # instead of letting this crash the process — everything traced
+            # up to this point is still valid, so the run/dashboard aren't
+            # left in a broken state.
+            print(f"[run_agent] model failed to produce a valid tool call: {exc}")
+            print(f"[run_agent] stopping at step {step} (see trace for prior steps)")
+            break
 
         tool = response["tool"]
         args = response["arguments"]
@@ -219,17 +270,11 @@ def run_agent(task: str, workspace: str, run_id: str | None = None) -> str:
             }],
         })
 
+        if tool == "done":
+            break
+
         try:
-            if tool == "search":
-                observation = search(workspace, **args)
-            elif tool == "read_file":
-                observation = read_file(workspace, **args)
-            elif tool == "write_file":
-                observation = write_file(workspace, **args)
-            elif tool == "done":
-                break
-            else:
-                raise ValueError(f"unknown tool: {tool}")
+            observation = _execute_tool(tool, args, workspace)
         except (TypeError, ValueError, OSError) as exc:
             # Covers: wrong argument names from a small local model (TypeError),
             # a workspace-escape attempt or write-size-cap trip (ValueError),
@@ -257,6 +302,11 @@ def run_agent(task: str, workspace: str, run_id: str | None = None) -> str:
 
         messages.append({"role": "tool", "tool_call_id": tool_call_id, "content": observation})
         step += 1
+
+        if max_steps is not None and step >= max_steps:
+            print(f"[run_agent] reached max_steps={max_steps}, stopping")
+            break
+
         time.sleep(0)  # placeholder for rate limiting if needed
 
     return run_id

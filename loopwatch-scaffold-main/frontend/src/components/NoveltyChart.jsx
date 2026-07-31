@@ -1,7 +1,7 @@
 import React from 'react';
-import { TrendingDown, Activity, AlertCircle } from 'lucide-react';
+import { TrendingDown, Activity, AlertCircle, Sparkles, Terminal } from 'lucide-react';
 
-export default function NoveltyChart({ steps = [], activeStepIndex = 0 }) {
+export default function NoveltyChart({ steps = [], activeStepIndex = 0, prompt = '' }) {
   if (!steps || steps.length === 0) return null;
 
   const width = 600;
@@ -27,6 +27,21 @@ export default function NoveltyChart({ steps = [], activeStepIndex = 0 }) {
   return (
     <div className="bg-[#0e121a] border border-[#21293a] rounded-xl p-4 shadow-xl font-mono">
       
+      {/* Active Task Prompt Banner */}
+      {prompt && (
+        <div className="mb-3.5 px-3 py-2 rounded-lg bg-[#161b22] border border-[#30363d] text-xs flex items-start gap-2.5 shadow-inner">
+          <Sparkles className="w-4 h-4 text-[#58a6ff] shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-[#8b949e] font-bold text-[10px] uppercase tracking-wider">🎯 Active Task Prompt</span>
+            </div>
+            <p className="text-white font-medium text-xs leading-snug break-words">
+              "{prompt}"
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-3 text-xs">
         <div className="flex items-center gap-2 text-white font-semibold">
           <Activity className="w-4 h-4 text-[#00f0ff]" />

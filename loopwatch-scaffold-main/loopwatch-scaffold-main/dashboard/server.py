@@ -14,11 +14,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from detectors.replay import evaluate_full_run
 
 TRACES_DIR = Path(__file__).resolve().parent.parent / "traces"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+CORPUS_DIR = Path(__file__).resolve().parent.parent / "eval" / "corpus"
 
 # Must match harness/guard.py's RUN_ID_PATTERN — run_id becomes a path segment
 # here too; an unvalidated run_id was a confirmed arbitrary-file-read via
@@ -118,6 +120,38 @@ def list_runs():
     return sorted(p.stem for p in TRACES_DIR.glob("*.jsonl"))
 
 
+CUSTOM_PROMPTS: dict[str, str] = {}
+
+PRESET_PROMPTS = {
+    "fixture_spinning": "Refactor auth_service.py to use async/await and update password hashing.",
+    "fixture_productive": "Add user input validation to payments/processor.py and create unit tests.",
+    "demo_guard_off": "Refactor auth_service.py while disabling safety circuit breakers (Spinning).",
+    "demo_guard_on": "Refactor auth_service.py with safety circuit breakers enabled (Halted at Step 5).",
+    "demo_long_productive": "Perform long refactoring of payments module with currency support across 40 steps.",
+    "demo_halt_step_cap": "Run agent loop exceeding maximum step threshold (40 steps cap).",
+    "demo_halt_spend_cap": "Run agent loop exceeding total spend cap ($2.00 limit).",
+    "demo_halt_exact_repeat": "Perform identical repeated tool calls causing Detector 2 (Exact Repeat) halt.",
+    "demo_halt_near_repeat": "Perform near-identical repetitive tool calls causing Detector 3 (Near Repeat) halt.",
+    "demo_halt_no_progress": "Perform flat unproductive actions causing Detector 4 (No Progress) halt.",
+}
+
+
+def _resolve_prompt(run_id: str) -> str:
+    if run_id in CUSTOM_PROMPTS:
+        return CUSTOM_PROMPTS[run_id]
+    
+    corpus_file = CORPUS_DIR / f"{run_id}.json"
+    if corpus_file.exists():
+        try:
+            data = json.loads(corpus_file.read_text(encoding="utf-8"))
+            if "prompt" in data:
+                return data["prompt"]
+        except Exception:
+            pass
+            
+    return PRESET_PROMPTS.get(run_id, "")
+
+
 @app.get("/api/trace/{run_id}")
 def get_trace(run_id: str):
     if not RUN_ID_PATTERN.fullmatch(run_id):
@@ -139,6 +173,7 @@ def get_trace(run_id: str):
     return {
         "steps": steps_with_novelty,
         "total_cost": sum(s["cost_usd"] for s in steps),
+        "prompt": _resolve_prompt(run_id),
         "verdict": {
             "should_halt": verdict.should_halt,
             "detector": verdict.detector,
@@ -172,7 +207,14 @@ def list_workspace_files(run_id: str):
     files = []
     for p in sorted(ws_dir.rglob("*")):
         if p.is_file():
-            files.append(str(p.relative_to(ws_dir)).replace("\\", "/"))
+            try:
+                st_size = p.stat().st_size
+            except Exception:
+                st_size = 0
+            files.append({
+                "path": str(p.relative_to(ws_dir)).replace("\\", "/"),
+                "size": st_size,
+            })
     return files
 
 
@@ -187,3 +229,74 @@ def get_workspace_file(run_id: str, path: str):
     if not target.exists() or not target.is_file():
         return {"content": f"file not found: {path}"}
     return {"content": target.read_text(encoding="utf-8", errors="replace")}
+
+
+class FileSavePayload(BaseModel):
+    content: str
+
+
+@app.post("/api/workspace/{run_id}/file")
+def save_workspace_file(run_id: str, path: str, payload: FileSavePayload):
+    if not RUN_ID_PATTERN.fullmatch(run_id):
+        return {"success": False, "error": "invalid run_id"}
+    ws_dir = _get_workspace_dir(run_id).resolve()
+    target = (ws_dir / path).resolve()
+    if ws_dir not in target.parents and target != ws_dir:
+        return {"success": False, "error": "path traversal rejected"}
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(payload.content, encoding="utf-8")
+        return {"success": True, "path": path, "size": len(payload.content)}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/presets")
+def list_presets():
+    if not CORPUS_DIR.exists():
+        return []
+    presets = []
+    for p in sorted(CORPUS_DIR.glob("*.json")):
+        if p.name in ("fixture_productive.json", "fixture_spinning.json"):
+            continue
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            presets.append({
+                "task_id": data.get("task_id", p.stem),
+                "category": data.get("category", "productive"),
+                "prompt": data.get("prompt", ""),
+                "expected_outcome": data.get("expected_outcome", ""),
+            })
+        except Exception:
+            continue
+    return presets
+
+
+class RunAgentPayload(BaseModel):
+    prompt: str
+
+
+@app.post("/api/agent/run")
+def start_custom_agent_run(payload: RunAgentPayload):
+    import threading
+    import time
+    from harness.agent_loop import run_agent
+
+    prompt = payload.prompt.strip()
+    if not prompt:
+        return {"error": "Prompt cannot be empty"}
+
+    run_id = f"custom_run_{int(time.time())}"
+    CUSTOM_PROMPTS[run_id] = prompt
+    ws_dir = str(Path(__file__).resolve().parent.parent / "fixtures" / "workspaces" / "basic_repo")
+
+    def worker():
+        try:
+            run_agent(task=prompt, workspace=ws_dir, run_id=run_id, halting_enabled=True)
+        except Exception as exc:
+            print(f"[start_custom_agent_run] error running agent for {run_id}: {exc}")
+
+    t = threading.Thread(target=worker, daemon=True)
+    t.start()
+
+    return {"run_id": run_id, "status": "started", "prompt": prompt}

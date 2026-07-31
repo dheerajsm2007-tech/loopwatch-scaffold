@@ -1,5 +1,10 @@
-"""Logging utilities.
+"""Application logger utility."""
+import time
 
-TODO (productive_11): add a structured JSON logger wrapper supporting
-contextual fields (request_id, timestamp, level).
-"""
+def log_info(message: str) -> None:
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] INFO: {message}")
+
+def log_error(message: str) -> None:
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] ERROR: {message}")

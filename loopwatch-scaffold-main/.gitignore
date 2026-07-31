@@ -7,9 +7,14 @@ node_modules/
 dist/
 .pytest_cache/
 *.zip
+*.png
+*.jpeg
+*.jpg
 
 # real run output
 traces/snapshots/
+traces/custom_run_*.jsonl
+loopwatch-scaffold-main/traces/custom_run_*.jsonl
 
 # scratch workspaces
 scratch/

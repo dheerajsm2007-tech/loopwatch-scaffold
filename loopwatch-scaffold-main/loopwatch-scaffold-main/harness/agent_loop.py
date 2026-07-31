@@ -222,6 +222,23 @@ def _execute_tool(tool: str, args: dict, workspace: str) -> str:
         raise ValueError(f"unknown tool: {tool}")
 
 
+def _snapshot_file_tree(workspace: str, max_entries: int = 300) -> str:
+    base = Path(workspace).resolve()
+    if not base.exists() or not base.is_dir():
+        return ""
+    paths = sorted(
+        str(p.relative_to(base)).replace("\\", "/")
+        for p in base.rglob("*") if p.is_file() and not p.name.startswith(".")
+    )
+    return "\n".join(paths[:max_entries])
+
+
+SYSTEM_PROMPT_TEMPLATE = """You are editing a real codebase at the workspace root. Only reference files that exist below, or that you create yourself with write_file. Never invent placeholder filenames (e.g. file_8.py), search queries (e.g. query_6), or filler file content (e.g. "foo"). If you have no concrete next action grounded in a real file, use think to reason, or done if the task is complete.
+
+Workspace files:
+{file_tree}"""
+
+
 def run_agent(task: str, workspace: str, run_id: str | None = None,
               halting_enabled: bool = True, max_steps: int | None = None) -> str:
     """Runs the loop until the agent stops itself, the guard halts it, or
@@ -235,7 +252,11 @@ def run_agent(task: str, workspace: str, run_id: str | None = None,
     run_id = run_id or f"run_{uuid.uuid4().hex[:8]}"
     guard = Guard(run_id=run_id, halting_enabled=halting_enabled)
 
-    messages = [{"role": "user", "content": task}]
+    file_tree = _snapshot_file_tree(workspace)
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT_TEMPLATE.format(file_tree=file_tree)},
+        {"role": "user", "content": task},
+    ]
     step = 0
 
     while True:

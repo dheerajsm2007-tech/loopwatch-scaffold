@@ -4,17 +4,17 @@
 
 @layer base {
   :root {
-    --color-bg: #090b0e;
-    --color-card: #0e121a;
-    --color-surface: #141a26;
-    --color-border: #21293a;
-    --color-cyan: #00f0ff;
-    --color-crimson: #ff4d4d;
+    --color-bg: #000000;
+    --color-card: #090b10;
+    --color-surface: #161b22;
+    --color-border: #21262d;
+    --color-cyan: #58a6ff;
+    --color-crimson: #f85149;
   }
 
   body {
-    background-color: #090b0e;
-    color: #f1f5f9;
+    background-color: #000000;
+    color: #c9d1d9;
     font-family: 'Inter', system-ui, sans-serif;
   }
 }
@@ -25,32 +25,48 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090b0e;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: #21293a;
+  background: #21262d;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #313d54;
+  background: #30363d;
+}
+
+/* Custom Scrollbar utility classes */
+.lg-scroll-tree,
+.lg-scroll-y,
+.lg-scroll-x {
+  scrollbar-width: thin;
+  scrollbar-color: #21262d transparent;
+}
+
+.lg-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.lg-no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom Glows & Utilities */
 .glow-cyan {
-  box-shadow: 0 0 25px -5px rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 25px -5px rgba(88, 166, 255, 0.25);
 }
 .glow-crimson {
-  box-shadow: 0 0 30px -5px rgba(255, 77, 77, 0.35);
+  box-shadow: 0 0 30px -5px rgba(248, 81, 73, 0.35);
 }
 
 .border-glow-cyan {
-  border-color: rgba(0, 240, 255, 0.4);
-  box-shadow: 0 0 15px -3px rgba(0, 240, 255, 0.2);
+  border-color: rgba(88, 166, 255, 0.4);
+  box-shadow: 0 0 15px -3px rgba(88, 166, 255, 0.2);
 }
 
 .border-glow-crimson {
-  border-color: rgba(255, 77, 77, 0.6);
-  box-shadow: 0 0 20px -3px rgba(255, 77, 77, 0.3);
+  border-color: rgba(248, 81, 73, 0.6);
+  box-shadow: 0 0 20px -3px rgba(248, 81, 73, 0.3);
 }
 
 .bg-grid-pattern {
@@ -58,16 +74,4 @@
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-}
-
-/* Terminal Scanline */
-.terminal-scanline {
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0) 50%,
-    rgba(0, 240, 255, 0.04) 50%,
-    rgba(0, 240, 255, 0.04)
-  );
-  background-size: 100% 4px;
 }
